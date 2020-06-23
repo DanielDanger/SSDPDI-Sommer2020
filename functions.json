@@ -1,0 +1,31 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get",
+        "post"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    }
+     ,
+  
+     {
+       "type": "cosmosDB",
+       "direction": "out",
+       "name": "Elemente",
+       "databaseName": "ssdpdi",
+    "collectionName": "Items",
+       "createIfNotExists": "true",
+       "connectionStringSetting": "AccountEndpoint=https://ssdpdi.documents.azure.com:443/;AccountKey=iEBKSwezFAfsNGGROPJNv3qdjc4PAQfWBc5TEw57tqhjFd44V6xzAispXq9kGvtN1oTlB4qRHwGCKvzEDLf91g==;"
+     }
+  ]
+}
