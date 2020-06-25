@@ -1,0 +1,74 @@
+from azure.cosmos import exceptions, CosmosClient, PartitionKey
+import azure.cosmos.exceptions as exceptions
+import azure.functions as func
+import json
+import logging
+
+
+
+def wirte_to_db(): 
+    pass
+
+def create_db(): 
+    # Initialize the Cosmos client
+    endpoint = "https://ssdpdi.documents.azure.com:443/"
+    key = 'iEBKSwezFAfsNGGROPJNv3qdjc4PAQfWBc5TEw57tqhjFd44V6xzAispXq9kGvtN1oTlB4qRHwGCKvzEDLf91g=='
+    # <create_cosmos_client>
+    client = CosmosClient(endpoint, key)
+    # </create_cosmos_client>
+
+    # Create a database
+    # <create_database_if_not_exists>
+    database_name = 'SSD'
+    container_name = 'Elemente'
+    #database = client.create_database_if_not_exists(id=database_name)
+    # </create_database_if_not_exists> 
+    database = client.get_database_client(database_name)
+    container = database.get_container_client(container_name) 
+
+    return container 
+
+
+
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+
+    container = create_db()
+
+
+
+    logging.info('Python HTTP trigger function processed a request.')
+
+    name = req.params.get('name')
+    if not name:
+        try:
+            req_body = req.get_json()
+
+            #Die ID von der Anfrage extrahieren. 
+            user_id = req_body['id']
+            #An dieser Stelle muss erstmal geprüft werden, ob ein User schon ggf. ein Datensatz in der Datenbank hat. 
+            #Mittel ID wird die Datenbank abgefragt
+
+           
+            for item in container.query_items(query='SELECT * FROM Elemente c WHERE c.id=\"'+  user_id +  '\"', enable_cross_partition_query=True):
+                print(json.dumps(item, indent=True))
+            # löscht ausgewählte Elemente 
+                #container.delete_item(item=item, partition_key="Kalendar")
+                
+
+        except ValueError:
+            pass
+    else:
+        
+        name = req_body.get('name')
+
+    if name:
+        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
+    else:
+        # Erstelle die Parameter in der Datenbank, hoffentlich wird niemals jemand den Code zu Gesicht bekommen 
+        container.create_item(body=req_body)
+        return func.HttpResponse(
+             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             status_code=200
+        )
+
