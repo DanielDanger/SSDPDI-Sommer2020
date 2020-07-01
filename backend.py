@@ -15,7 +15,7 @@ from ortools.algorithms import pywrapknapsack_solver
 import pandas as pd
 from datetime import timedelta  
 from datetime import datetime
-
+import asyncio
 
 # Festlegen mit welchem Service-User auf die Google-Apis zugegriffen werden soll. 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -45,7 +45,7 @@ def get_events(request,calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.goo
         return json.dumps("401 Unauthorized ")
 
 # Funktion die einen Cosmos_Client erzeugt, welcher dann mit der Datenbank kommunizieren kann 
-def create_cosmos_client(request):
+def create_cosmos_client():
      # Initialize the Cosmos client
     endpoint = "https://ssdpdi.documents.azure.com:443/"
     key = 'iEBKSwezFAfsNGGROPJNv3qdjc4PAQfWBc5TEw57tqhjFd44V6xzAispXq9kGvtN1oTlB4qRHwGCKvzEDLf91g=='
@@ -55,8 +55,8 @@ def create_cosmos_client(request):
     return client
 
 # Funktion die einen Container erzeugt 
-def create_cosmos_container(request):
-    client = create_cosmos_client(request=request)
+def create_cosmos_container():
+    client = create_cosmos_client()
     # Create a database
     # <create_database_if_not_exists>
     database_name = 'SSD'
@@ -79,9 +79,9 @@ def create_priorities(request):
     container.create_item(body=request_json)
 
 # Funktion welche die Informatione zu einem User aus der Datenbank zieht 
-def get_userinfo(request,user_id="100"): 
+def get_userinfo(request): 
 
-
+   
     user = request.headers.get('user')
     private_key_id = request.headers.get('private_key_id')
 
@@ -89,18 +89,22 @@ def get_userinfo(request,user_id="100"):
 
     
         if request.headers.get('user_id'): 
-            user_id = request.headers.get('user')
+            user_id = request.headers.get('user_id')
             
         else: 
             user_id="100"
+        
+        container = create_cosmos_container() 
 
-        container = create_cosmos_container(request=request) 
-
-        for item in container.query_items(query='SELECT * FROM Elemente c WHERE c.id=\"'+  user_id +  '\"', enable_cross_partition_query=True):
+        
+        
+        for item in  container.query_items(query='SELECT * FROM Elemente c WHERE c.id=\"'+  user_id +  '\"', enable_cross_partition_query=True):
             user_info = json.dumps(item, indent=True)
-    
-        return user_info
+        
+        
 
+        return user_info
+        
     else:
         return ("401 unauthorized")
 
@@ -109,13 +113,25 @@ def delete_userinfo(request):
     user = request.headers.get('user')
     private_key_id = request.headers.get('private_key_id')
 
+    user_id = request.headers.get('user_id') 
+
+    #cosmos Client erzeugen 
+    container = create_cosmos_container()
+
+
     if user == HTTP_USER and private_key_id == HTTP_KEY:
-        return("success")
-        #for item in client.QueryItems("dbs/" + database_id + "/colls/" + container_id,'SELECT * FROM products p WHERE p.productModel = "DISCONTINUED"',{'enableCrossPartitionQuery': True})
+
+
+         for item in  container.query_items(query='SELECT * FROM Elemente c WHERE c.id=\"'+  user_id +  '\"', enable_cross_partition_query=True):
+            #user_info = json.dumps(item, indent=True)
         
-        #client.DeleteItem("dbs/" + database_id + "/colls/" + container_id + "/docs/" + item['id'],{'partitionKey': 'Pager'})
+            container.delete_item(item, partition_key='personal')
+
+
+            return ('Your user data with id: \"'+user_id+'\" was successfully deleted')
 
     else: 
+
         return ("401 unauthorized")
 
 
@@ -375,4 +391,11 @@ def replan_events(request):
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
 
     """
+
+
+
+
+
+
+
 
