@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1z00psm" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Zeebe Modeler" exporterVersion="0.9.1">
+  <bpmn:process id="stress-process" isExecutable="true">
+    <bpmn:sequenceFlow id="Flow_06dyb1k" sourceRef="Gateway_0uzwadj" targetRef="Event_0v3mit7" />
+    <bpmn:sequenceFlow id="Flow_1ndrt8p" name="Termine für Umplanung vorhanden" sourceRef="Gateway_0uzwadj" targetRef="calendarReplanning">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=analyseResult.items != null</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0ro115x" sourceRef="calendarUpdate" targetRef="Event_0bhqfyb" />
+    <bpmn:sequenceFlow id="Flow_1x3pj38" sourceRef="calendarReplanning" targetRef="calendarUpdate" />
+    <bpmn:sequenceFlow id="Flow_1xuhbxj" sourceRef="calendarAnalyze" targetRef="Gateway_0uzwadj" />
+    <bpmn:endEvent id="Event_0v3mit7" name="Kalender beibehalten">
+      <bpmn:incoming>Flow_06dyb1k</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_0bhqfyb" name="Kalender geändert">
+      <bpmn:incoming>Flow_0ro115x</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="calendarUpdate" name="User-Kalender updaten">
+      <bpmn:extensionElements>
+        <zeebe:taskHeaders>
+          <zeebe:header key="calendarUpdated" value="done" />
+        </zeebe:taskHeaders>
+        <zeebe:taskDefinition type="step-calendarUpdate" retries="2" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1x3pj38</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ro115x</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="calendarReplanning" name="Termine umplanen">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="step-calendarReplanning" retries="2" />
+        <zeebe:taskHeaders>
+          <zeebe:header key="calendarReplannd" value="done" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ndrt8p</bpmn:incoming>
+      <bpmn:outgoing>Flow_1x3pj38</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_0uzwadj" default="Flow_06dyb1k">
+      <bpmn:incoming>Flow_1xuhbxj</bpmn:incoming>
+      <bpmn:outgoing>Flow_06dyb1k</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1ndrt8p</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0vow4ts</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="calendarAnalyze" name="User-Kalender analysieren">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="step-calendarAnalyze" retries="2" />
+        <zeebe:taskHeaders>
+          <zeebe:header key="calendarAnalyze" value="done" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0hvi0hq</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xuhbxj</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="StartEvent_1" name="Stressbenachrichtigung erhalten">
+      <bpmn:outgoing>Flow_0hvi0hq</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0hvi0hq" sourceRef="StartEvent_1" targetRef="calendarAnalyze" />
+    <bpmn:sequenceFlow id="Flow_0vow4ts" name="Umplanung nicht möglich" sourceRef="Gateway_0uzwadj" targetRef="notifyUser">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=notifyUser = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0m05vf3" sourceRef="notifyUser" targetRef="Event_1gceltm" />
+    <bpmn:endEvent id="Event_1gceltm" name="Benachrichtigung erstellt">
+      <bpmn:incoming>Flow_0m05vf3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="notifyUser" name="User benachrichtigen">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="step-notifyUser" retries="2" />
+        <zeebe:taskHeaders>
+          <zeebe:header key="userNotified" value="done" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0vow4ts</bpmn:incoming>
+      <bpmn:outgoing>Flow_0m05vf3</bpmn:outgoing>
+    </bpmn:serviceTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="stress-process">
+      <bpmndi:BPMNEdge id="Flow_0m05vf3_di" bpmnElement="Flow_0m05vf3">
+        <di:waypoint x="620" y="220" />
+        <di:waypoint x="620" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vow4ts_di" bpmnElement="Flow_0vow4ts">
+        <di:waypoint x="620" y="385" />
+        <di:waypoint x="620" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="528" y="336" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0hvi0hq_di" bpmnElement="Flow_0hvi0hq">
+        <di:waypoint x="218" y="410" />
+        <di:waypoint x="360" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xuhbxj_di" bpmnElement="Flow_1xuhbxj">
+        <di:waypoint x="460" y="410" />
+        <di:waypoint x="595" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1x3pj38_di" bpmnElement="Flow_1x3pj38">
+        <di:waypoint x="860" y="410" />
+        <di:waypoint x="960" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ro115x_di" bpmnElement="Flow_0ro115x">
+        <di:waypoint x="1060" y="410" />
+        <di:waypoint x="1172" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ndrt8p_di" bpmnElement="Flow_1ndrt8p">
+        <di:waypoint x="645" y="410" />
+        <di:waypoint x="760" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="644" y="420" width="57" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06dyb1k_di" bpmnElement="Flow_06dyb1k">
+        <di:waypoint x="620" y="435" />
+        <di:waypoint x="620" y="492" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0v3mit7_di" bpmnElement="Event_0v3mit7">
+        <dc:Bounds x="602" y="492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="592" y="535" width="57" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0bhqfyb_di" bpmnElement="Event_0bhqfyb">
+        <dc:Bounds x="1172" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1167" y="435" width="46" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1nbupav_di" bpmnElement="calendarUpdate">
+        <dc:Bounds x="960" y="370" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_02t5bb4_di" bpmnElement="calendarReplanning">
+        <dc:Bounds x="760" y="370" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0uzwadj_di" bpmnElement="Gateway_0uzwadj" isMarkerVisible="true">
+        <dc:Bounds x="595" y="385" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1mi0oe5_di" bpmnElement="calendarAnalyze">
+        <dc:Bounds x="360" y="370" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="156" y="435" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1gceltm_di" bpmnElement="Event_1gceltm">
+        <dc:Bounds x="602" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="578" y="82" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0klyerg_di" bpmnElement="notifyUser">
+        <dc:Bounds x="570" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
