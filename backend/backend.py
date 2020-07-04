@@ -22,8 +22,8 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 SUBJECT = 'pdissd@quickstart-1592463381049.iam.gserviceaccount.com'
 SERVICE_ACCOUNT_FILE = 'service-account.json'
 
-HTTP_USER = 'pdissd@quickstart-1592463381049.iam.gserviceaccount.com'
-HTTP_KEY =  '6853c54195cc2d04b890f786bb7b3373ac5d8568'
+HTTP_USER = ''
+HTTP_KEY =  ''
 
 
 def get_events(request,calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com" ):
@@ -322,64 +322,82 @@ def replan_events(request):
     user = request.headers.get('user')
     private_key_id = request.headers.get('private_key_id')
     # ID aus dem Request holen. 
+    create = request.headers.get('create')
     
     if user == HTTP_USER and private_key_id == HTTP_KEY:
 
-        #Service Objekt erzeugen 
-        service = generate_service_object()
+        # Wenn im Header ein create mitgegen wurde, rufe die erzeugen Funktion auf und übergeben die Request 
+        if create: 
+            # Lege ein neues Event im Kalender an 
+            answer = create_event(request=request)
+            return json.dumps(answer)
 
-        request_json = request.get_json(silent=True)
-        for i in request_json: 
+        else: 
+            #Service Objekt erzeugen 
+            service = generate_service_object()
 
-            # Speicher die Beschreibungen und die Descriptions des Events 
-            id_to_delete = i['id']
-            summary_for_event = i['summary']
-            description_for_event = i["description"]
-            alt_start = i['start']["dateTime"]
-            alt_start = alt_start[:19]
-            alte_zeit_start = datetime.strptime(alt_start,'%Y-%m-%dT%H:%M:%S') 
-            neue_zeit_start = alte_zeit_start + timedelta(hours=2)
-            
-            alt_end = i['end']["dateTime"]
-            alt_end = alt_end[:19]
-            alte_zeit_end = datetime.strptime(alt_end,'%Y-%m-%dT%H:%M:%S') 
-            neue_zeit_end = alte_zeit_end + timedelta(hours=2)
+            request_json = request.get_json(silent=True)
+            for i in request_json: 
 
-            neue_zeit_start = str(neue_zeit_start)
-            neue_zeit_end = str(neue_zeit_end)
-
-            neue_zeit_start = neue_zeit_start.replace(" ","T")
-            neue_zeit_end = neue_zeit_end.replace(" ","T")
-
-            print(type(neue_zeit_start))
-            print(neue_zeit_start)
-
-            post_body = {
-                'summary': ""+summary_for_event+"",
-                'location': '800 Howard St., San Francisco, CA 94103',
-                'description': ""+description_for_event+"",
-                'start': {
-                'dateTime': ""+neue_zeit_start+"",
-                'timeZone': 'Europe/Berlin',
-                },
-                'end': {
-                'dateTime': ""+neue_zeit_end+"",
-                'timeZone': 'Europe/Berlin',
-                }
-                }
+                # Speicher die Beschreibungen und die Descriptions des Events 
+                id_to_delete = i['id']
+                summary_for_event = i['summary']
+                description_for_event = i["description"]
+                alt_start = i['start']["dateTime"]
+                alt_start = alt_start[:19]
+                alte_zeit_start = datetime.strptime(alt_start,'%Y-%m-%dT%H:%M:%S') 
+                neue_zeit_start = alte_zeit_start + timedelta(hours=2)
                 
+                alt_end = i['end']["dateTime"]
+                alt_end = alt_end[:19]
+                alte_zeit_end = datetime.strptime(alt_end,'%Y-%m-%dT%H:%M:%S') 
+                neue_zeit_end = alte_zeit_end + timedelta(hours=2)
 
-            service.events().insert(calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com",body = post_body).execute() 
-            
-            # Alten Termin löschen 
-            service.events().delete(calendarId='aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com', eventId=i['id']).execute()
+                neue_zeit_start = str(neue_zeit_start)
+                neue_zeit_end = str(neue_zeit_end)
 
-        return("erfolgreich")
+                neue_zeit_start = neue_zeit_start.replace(" ","T")
+                neue_zeit_end = neue_zeit_end.replace(" ","T")
+
+                print(type(neue_zeit_start))
+                print(neue_zeit_start)
+
+                post_body = {
+                    'summary': ""+summary_for_event+"",
+                    'location': '800 Howard St., San Francisco, CA 94103',
+                    'description': ""+description_for_event+"",
+                    'start': {
+                    'dateTime': ""+neue_zeit_start+"",
+                    'timeZone': 'Europe/Berlin',
+                    },
+                    'end': {
+                    'dateTime': ""+neue_zeit_end+"",
+                    'timeZone': 'Europe/Berlin',
+                    }
+                    }
+                    
+
+                service.events().insert(calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com",body = post_body).execute() 
+                
+                # Alten Termin löschen 
+                service.events().delete(calendarId='aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com', eventId=i['id']).execute()
+
+            return("erfolgreich")
     else:
         return("401 unauthorized")   
 
-     
+# Methode, welche ein neues Element in den Kalender schreibt      
+def create_event(request): 
+    #Service Objekt erzeugen 
+    service = generate_service_object()
+    
+    body_request = request.get_json(silent=True)
 
+    answer = service.events().insert(calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com",body=body_request).execute()
+    
+    # Gib das Ergebnis an die aufrufende Funktion zurück
+    return answer
+    
 
     """HTTP Cloud Function.
     Args:
@@ -389,4 +407,12 @@ def replan_events(request):
         The response text, or any set of values that can be turned into a
         Response object using `make_response`
         <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+
     """
+
+
+
+
+
+
+
