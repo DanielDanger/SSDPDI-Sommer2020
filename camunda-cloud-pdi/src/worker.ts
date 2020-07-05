@@ -53,7 +53,7 @@ const analyzeWorker = zbc.createWorker("step-calendarAnalyze", async (job, compl
 
     const analyzeResult = await callGetRequestRestClient("/get_events");
     //console.log(job.variables);
-    complete.success({ analyseResult: analyzeResult });
+    complete.success({ analyseResult: analyzeResult, notifyUser: false });
 });
 
 //worker for replanning step
