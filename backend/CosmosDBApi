@@ -11,8 +11,8 @@ def wirte_to_db():
 
 def create_db(): 
     # Initialize the Cosmos client
-    endpoint = "https://ssdpdi.documents.azure.com:443/"
-    key = 'iEBKSwezFAfsNGGROPJNv3qdjc4PAQfWBc5TEw57tqhjFd44V6xzAispXq9kGvtN1oTlB4qRHwGCKvzEDLf91g=='
+    endpoint = ""
+    key = ''
     # <create_cosmos_client>
     client = CosmosClient(endpoint, key)
     # </create_cosmos_client>
