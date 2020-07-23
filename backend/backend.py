@@ -26,7 +26,7 @@ HTTP_USER = ''
 HTTP_KEY =  ''
 
 
-def get_events(request,calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com" ):
+def get_events(request,calendarId="" ):
     # Generiert ein Serviceobjekt und holt zu einer Kalenderid alle Events bis max. 500 
     
     user = request.headers.get('user')
@@ -35,7 +35,7 @@ def get_events(request,calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.goo
     if user == HTTP_USER and private_key_id == HTTP_KEY:
 
         service = generate_service_object()
-        result = service.events().list(calendarId = 'aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com', maxResults = 500).execute() 
+        result = service.events().list(calendarId = '', maxResults = 500).execute() 
 
         app_json = json.dumps(result)
         
@@ -48,7 +48,7 @@ def get_events(request,calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.goo
 def create_cosmos_client():
      # Initialize the Cosmos client
     endpoint = "https://ssdpdi.documents.azure.com:443/"
-    key = 'iEBKSwezFAfsNGGROPJNv3qdjc4PAQfWBc5TEw57tqhjFd44V6xzAispXq9kGvtN1oTlB4qRHwGCKvzEDLf91g=='
+    key = ''
     # <create_cosmos_client>
     client = CosmosClient(endpoint, key)
     # </create_cosmos_client>
@@ -377,10 +377,10 @@ def replan_events(request):
                     }
                     
 
-                service.events().insert(calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com",body = post_body).execute() 
+                service.events().insert(calendarId="",body = post_body).execute() 
                 
                 # Alten Termin löschen 
-                service.events().delete(calendarId='aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com', eventId=i['id']).execute()
+                service.events().delete(calendarId='', eventId=i['id']).execute()
 
             return("erfolgreich")
     else:
@@ -393,7 +393,7 @@ def create_event(request):
     
     body_request = request.get_json(silent=True)
 
-    answer = service.events().insert(calendarId="aqp0pv2uivgeqlk95vp60fbl3k@group.calendar.google.com",body=body_request).execute()
+    answer = service.events().insert(calendarId="",body=body_request).execute()
     
     # Gib das Ergebnis an die aufrufende Funktion zurück
     return answer
